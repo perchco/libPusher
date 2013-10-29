@@ -70,9 +70,7 @@
 - (void)dispatchEvent:(PTPusherEvent *)event
 {
   for (PTPusherEventBinding *binding in [bindings objectForKey:event.name]) {
-    if (binding.isValid || [event.name hasPrefix:@"pusher_internal"]) {
-      [binding dispatchEvent:event];
-    }
+    [binding dispatchEvent:event];
   }
 }
 
