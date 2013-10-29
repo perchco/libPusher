@@ -70,9 +70,7 @@
 - (void)dispatchEvent:(PTPusherEvent *)event
 {
   for (PTPusherEventBinding *binding in [bindings objectForKey:event.name]) {
-    if (binding.isValid) {
-      [binding dispatchEvent:event];
-    }
+    [binding dispatchEvent:event];
   }
 }
 
