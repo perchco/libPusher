@@ -51,6 +51,8 @@
     [binding invalidate];
     [bindingsForEvent removeObject:binding];
   }
+  
+  [bindings setObject:bindingsForEvent forKey:binding.eventName];
 }
 
 - (void)removeAllBindings
