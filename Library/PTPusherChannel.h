@@ -10,7 +10,7 @@
 #import "PTPusherEventPublisher.h"
 #import "PTEventListener.h"
 #import "PTPusherPresenceChannelDelegate.h"
-
+#import "PTPusherMacros.h"
 
 @class PTPusher;
 @class PTPusherEventDispatcher;
@@ -36,16 +36,7 @@
  Channels can be subscribed to or unsubscribed to at any time, even before the initial 
  Pusher connection has been established.
  */
-@interface PTPusherChannel : NSObject <PTPusherEventBindings, PTEventListener> {
-  NSString *name;
-#if __IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_5_0
-    __weak PTPusher *pusher;
-#else
-    __unsafe_unretained PTPusher *pusher;
-#endif
-  PTPusherEventDispatcher *dispatcher;
-  NSMutableArray *internalBindings;
-}
+@interface PTPusherChannel : NSObject <PTPusherEventBindings, PTEventListener>
 
 ///------------------------------------------------------------------------------------/
 /// @name Properties
@@ -107,9 +98,7 @@
  
  Only private and presence channels support the triggering client events.
  */
-@interface PTPusherPrivateChannel : PTPusherChannel {
-  NSMutableArray *clientEventBuffer;
-}
+@interface PTPusherPrivateChannel : PTPusherChannel
 
 ///------------------------------------------------------------------------------------/
 /// @name Triggering events
@@ -136,6 +125,8 @@
 
 @end
 
+@class PTPusherChannelMembers;
+
 /** A PTPusherPresenceChannel object represents a Pusher presence channel.
  
  Presence channels build on the security of Private channels and expose the additional feature 
@@ -150,10 +141,7 @@
  
  @see PTPusherPresenceChannelDelegate
  */
-@interface PTPusherPresenceChannel : PTPusherPrivateChannel {
-  NSMutableDictionary *members;
-  NSMutableArray *memberIDs; // store these separately to preserve order
-}
+@interface PTPusherPresenceChannel : PTPusherPrivateChannel
 
 ///------------------------------------------------------------------------------------/
 /// @name Properties
@@ -164,29 +152,63 @@
  The presence delegate will be notified of presence channel-specific events, such as the initial
  member list on subscription and member added/removed events.
  */
-#if __IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_5_0
 @property (nonatomic, weak) id<PTPusherPresenceChannelDelegate> presenceDelegate;
-#else
-@property (nonatomic, unsafe_unretained) id<PTPusherPresenceChannelDelegate> presenceDelegate;
-#endif
 
-/** Returns the current list of channel members.
- 
- Members are stored as a dictionary of dictionaries, keyed on the member's "user_id" field.
- 
- @deprecated Use the methods below for accessing member data.
+/** Returns the channel member list.
  */
-@property (nonatomic, readonly) NSDictionary *members;
+@property (nonatomic, readonly) PTPusherChannelMembers *members;
 
 /** Returns a dictionary of member metadata (email, name etc.) for the given member ID.
+ *
+ * @deprecated Use the members object.
  */
-- (NSDictionary *)infoForMemberWithID:(NSString *)memberID;
+- (NSDictionary *)infoForMemberWithID:(NSString *)memberID __PUSHER_DEPRECATED__;
 
 /** Returns an array of available member IDs 
+ *
+ * @deprecated Use the members object.
  */
-- (NSArray *)memberIDs;
+- (NSArray *)memberIDs __PUSHER_DEPRECATED__;
 
 /** Returns the number of members currently connected to this channel.
+ *
+ * @deprecated Use the members object.
  */
-- (NSInteger)memberCount;
+- (NSInteger)memberCount __PUSHER_DEPRECATED__;
+@end
+
+/** Represents a single member in a presence channel.
+ *
+ * Object subscripting can be used to access individual keys in a user's info dictionary.
+ *
+ */
+@interface PTPusherChannelMember : NSObject
+
+@property (nonatomic, readonly) NSString *userID;
+@property (nonatomic, readonly) NSDictionary *userInfo;
+
+- (id)objectForKeyedSubscript:(id <NSCopying>)key;
+
+@end
+
+/** Represents an unordered collection of members in a presence channel.
+ *
+ * Individual members are represented by instances of the class PTPusherChannelMember.
+ *
+ * This object supports subscripting for member access (where the user ID is the key).
+ *
+ * If you require an ordered list of members (e.g. to display in a table view)
+ * you should implement the presence delegate methods and maintain your own ordered list.
+ *
+ */
+@interface PTPusherChannelMembers : NSObject
+
+@property (nonatomic, readonly) NSInteger count;
+@property (nonatomic, copy, readonly) NSString *myID;
+@property (nonatomic, readonly) PTPusherChannelMember *me;
+
+- (PTPusherChannelMember *)memberWithID:(NSString *)userID;
+- (void)enumerateObjectsUsingBlock:(void (^)(id obj, BOOL *stop))block;
+- (id)objectForKeyedSubscript:(id <NSCopying>)key;
+
 @end
