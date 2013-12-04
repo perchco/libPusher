@@ -50,7 +50,7 @@
     [bindingsForEvent removeObject:binding];
   }
   
-  [bindings setObject:bindingsForEvent forKey:binding.eventName];
+  [_bindings setObject:bindingsForEvent forKey:binding.eventName];
 }
 
 - (void)removeAllBindings
